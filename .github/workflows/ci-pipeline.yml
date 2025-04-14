@@ -1,0 +1,47 @@
+name: Java Spring Boot CI Pipeline
+
+# --- Trigger Configuration ---
+on:
+  # Trigger on push events to the main branch
+  push:
+    branches:
+      - main
+
+  # Allow manual triggering from the GitHub Actions UI
+  workflow_dispatch:
+
+# --- Define Jobs ---
+jobs:
+  build-and-test: # Job ID
+    # --- Select Operating System ---
+    runs-on: ubuntu-latest
+
+    # --- Grant Permissions (needed for the 'Update code' step) ---
+    permissions:
+      contents: write
+
+    # --- Define Steps ---
+    steps:
+      # --- 1. Clone the project ---
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      # --- 2. Install the software (Set up JDK 11) ---
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # --- 3. Download dependencies ---
+      - name: Download Maven dependencies
+        run: mvn dependency:go-offline
+
+      # --- 4. Run unit tests ---
+      - name: Run unit tests with Maven
+        run: mvn test
+
+      # --- 5. Create a project build (WAR package) ---
+      - name: Build application with Maven
+        run: mvn package -DskipTests
